@@ -19,23 +19,24 @@ def run_script(nick_to_search):
     # Inicializar o navegador
     driver = webdriver.Chrome(options=chrome_options)
 
+    # Abra a URL
     url = f"https://br.crossfire.z8games.com/competitiveranking.html"
-
     driver.get(url)
 
     try:
-       if nick_to_search:
+        if nick_to_search:
             # Inserir o nick na barra de pesquisa
             search_field = driver.find_element(By.ID, "desk_search_text")
             search_field.send_keys(nick_to_search + Keys.RETURN)
 
             # Esperar pelos resultados da pesquisa
-            results_locator = (By.XPATH, "//ul[@class='cfr-rank col-4b']")
+            results_locator = (By.XPATH, "//ul[contains(@class, 'cfr-rank') and contains(@class, 'col-4b')]")
             WebDriverWait(driver, 5).until(EC.presence_of_element_located(results_locator))
 
             # Encontrar o elemento que contém o nick desejado na tabela de resultados
-            result_element = driver.find_element(By.XPATH, f"//ul[@class='cfr-rank col-4b']//li[@class='cfr-rank-name']/a[contains(text(), '{nick_to_search}')]")
-            
+            result_xpath = f"//ul[@class='cfr-rank col-4b']//li[@class='cfr-rank-name']/a[contains(text(), '{nick_to_search}')]"
+            result_element = driver.find_element(By.XPATH, result_xpath)
+
             # Extrair o link do atributo href
             profile_link = result_element.get_attribute("href")
 
@@ -60,27 +61,17 @@ def run_script(nick_to_search):
 
         player_name = h1_element.find_element(By.TAG_NAME, "a").text
 
-        try:
-            season_name = season_elements.find_element(By.CLASS_NAME, "pastseason_tierText__3j7pS").find_element(By.TAG_NAME, "h3").text
-        except NoSuchElementException:
-            season_name = "NÃO ENCONTRADO"
-
-        try:
-            modogame = season_elements.find_elements(By.CLASS_NAME, "pastseason_tierText__3j7pS")[1].find_element(By.TAG_NAME, "h5").text
-        except NoSuchElementException:
-            modogame = "NÃO ENCONTRADO"
-
-        try:
-            rank = season_elements.find_elements(By.CLASS_NAME, "pastseason_tierText__3j7pS")[1].find_element(By.TAG_NAME, "h3").text
-            rank = rank.replace("#", "")
-        except NoSuchElementException:
-            rank = "NÃO ENCONTRADO"
-
-        print(f'\n {season_name} - {player_name} - {modogame} - RANK: {rank}º')
+        # Tentar encontrar os elementos desejados
+        season_name = season_elements.find_element(By.CLASS_NAME, "pastseason_tierText__3j7pS").find_element(By.TAG_NAME, "h3").text
+        modogame = season_elements.find_elements(By.CLASS_NAME, "pastseason_tierText__3j7pS")[1].find_element(By.TAG_NAME, "h5").text
+        rank = season_elements.find_elements(By.CLASS_NAME, "pastseason_tierText__3j7pS")[1].find_element(By.TAG_NAME, "h3").text.replace("#", "")
         return f'\n {season_name} - {player_name} - {modogame} - RANK: {rank}º'
 
+    except NoSuchElementException:
+        print("Não foi possível encontrar informações do jogador.")
+
     except Exception as e:
-        print( f"Pesquise novamente! {e}")
+        print(f"Ocorreu um erro: {e}")
 
     # Fechar o navegador
     driver.quit()
@@ -88,7 +79,7 @@ def run_script(nick_to_search):
 # Bot
 class Bot(commands.Bot):
     def __init__(self):
-        super().__init__(token='xo6ne1nfecd6m31aj8g9r2hbzuq2ci', client_id='gp762nuuoqcoxypju8c569th9wz7q5', nick='rank', prefix='!', initial_channels=['yuuri_dev', 'zaipzin']) # Tem que ser MOD
+        super().__init__(token='xo6ne1nfecd6m31aj8g9r2hbzuq2ci', client_id='gp762nuuoqcoxypju8c569th9wz7q5', nick='rank', prefix='!', initial_channels=['yuuri_dev', 'zaipzin', 'paozin9', 'v1nniofc']) # Tem que ser MOD
 
     async def event_ready(self):
         print(f'\nOnline | {self.nick}\n')
